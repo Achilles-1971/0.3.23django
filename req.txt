@@ -1,0 +1,4 @@
+psycopg2-binary       # драйвер для PostgreSQL
+django-crispy-forms   # (опционально — удобные формы)
+django-apscheduler     # (опционально — планировщик задач)
+requests              # если будешь делать HTTP-запросы
