@@ -1,0 +1,46 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Предприятия{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Список предприятий</h2>
+
+<div class="row">
+  {% for e in enterprises %}
+  <div class="col-12 mb-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-light fw-bold">{{ e.name }}</div>
+
+      <div class="card-body">
+        <p><strong>Реквизиты:</strong> {{ e.requisites }}</p>
+        <p><strong>Телефон:</strong> {{ e.phone }}</p>
+        <p><strong>Контактное лицо:</strong> {{ e.contact_person }}</p>
+
+        <div class="d-flex gap-2 mt-3">
+          <a href="{% url 'indicator_values' %}?enterprise_id={{ e.id }}" class="btn btn-primary">
+            📊 Показатели
+          </a>
+
+          <button class="btn btn-secondary" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#weighted{{ e.id }}">
+            ⚖️ Взвешенные показатели
+          </button>
+        </div>
+
+        <!-- итоговая сумма -->
+        <div class="collapse mt-3" id="weighted{{ e.id }}">
+          <div class="border rounded p-3 bg-light">
+            {% if e.weighted_sum %}
+              <p class="fw-semibold mb-0">
+                Сумма взвешенных показателей: {{ e.weighted_sum }} RUB
+              </p>
+            {% else %}
+              <p class="text-muted mb-0">Нет данных для расчёта</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

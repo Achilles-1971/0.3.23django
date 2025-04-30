@@ -1,0 +1,268 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Курсы валют{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <h2 class="mb-4 fw-semibold">
+    Курсы валют <small class="text-muted">(90&nbsp;дней)</small>
+  </h2>
+
+  <!-- данные для JS -->
+  <div id="fx-data" data-api="{{ api_key }}" data-months="3"></div>
+
+  <!-- Фильтры -->
+  <div class="card border-0 shadow-sm p-4 mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Базовая валюта</label>
+        <select id="baseCur" class="form-select">
+          {% for c in currencies %}
+            <option value="{{ c }}" {% if c == base_currency %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Целевая валюта</label>
+        <select id="tgtCur" class="form-select">
+          {% for c in currencies %}
+            {% if c != base_currency %}
+              <option value="{{ c }}" {% if c == target_currency %}selected{% endif %}>{{ c }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3 d-flex align-items-end">
+        <button id="showBtn" class="btn btn-primary w-100">
+          <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+          <span class="ms-1">Показать</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- предупреждения -->
+  <div id="alerts" class="mb-3"></div>
+
+  <!-- график -->
+  <div class="card border-0 shadow-sm p-4">
+    <canvas id="chart" height="210" class="my-3"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4" 
+        onload="console.log('Chart.js loaded')" 
+        onerror="console.error('Failed to load Chart.js')"></script>
+<script>
+console.log('Script started');
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded');
+
+  // ---- константы ----
+  const CURS = ['RUB', 'USD', 'EUR'];
+  const dataEl = document.getElementById('fx-data');
+  const API_KEY = dataEl.dataset.api;
+  const MONTHS = parseInt(dataEl.dataset.months, 10);
+
+  // ---- DOM ----
+  const selBase = document.getElementById('baseCur');
+  const selTgt = document.getElementById('tgtCur');
+  const alerts = document.getElementById('alerts');
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const btnShow = document.getElementById('showBtn');
+  const spinner = document.getElementById('spinner');
+  let chart = null;
+
+  // ---- helpers ----
+  function warn(msg) {
+    alerts.innerHTML = `<div class="alert alert-warning mb-0">${msg}</div>`;
+  }
+
+  function showLoading(state) {
+    btnShow.disabled = state;
+    spinner.classList.toggle('d-none', !state);
+  }
+
+  // Перестраиваем список целевых валют, исключая базовую
+  function rebuildTargets() {
+    const baseNow = selBase.value;
+    const previous = selTgt.value;
+    selTgt.innerHTML = '';
+    CURS.filter(c => c !== baseNow).forEach(c => {
+      const opt = new Option(c, c);
+      selTgt.add(opt);
+    });
+    selTgt.value = (previous !== baseNow && CURS.includes(previous)) ? previous : selTgt.options[0].value;
+  }
+
+  // Преобразуем USD-базовые данные в base→target
+  function deriveSeries(labels, quotes, base, target) {
+    return labels.map(date => {
+      if (!quotes[date]) return null;
+      const baseRate = base === 'USD' ? 1 : quotes[date]['USD' + base];
+      const targetRate = target === 'USD' ? 1 : quotes[date]['USD' + target];
+      if (baseRate === undefined || targetRate === undefined) return null;
+      return targetRate / baseRate;
+    });
+  }
+
+  // Форматируем даты для оси X
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+
+  async function loadChart() {
+    alerts.innerHTML = '';
+    const base = selBase.value;
+    const target = selTgt.value;
+
+    if (base === target) {
+      warn('Базовая и целевая валюты не могут совпадать.');
+      return;
+    }
+
+    showLoading(true);
+
+    // Вычисляем диапазон дат
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - MONTHS);
+    const endStr = end.toISOString().slice(0, 10);
+    const startStr = start.toISOString().slice(0, 10);
+
+    // exchangerate.host запрос
+    const url = `https://api.exchangerate.host/timeframe?access_key=${API_KEY}&start_date=${startStr}&end_date=${endStr}&source=USD&currencies=EUR,RUB&format=1`;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.info || 'API: success=false');
+
+      const quotes = json.quotes;
+      if (!quotes || Object.keys(quotes).length === 0) {
+        throw new Error('Данные не найдены для выбранного периода');
+      }
+
+      const sampleDate = Object.keys(quotes)[0];
+      if (base !== 'USD' && !quotes[sampleDate]['USD' + base]) {
+        throw new Error(`Валюта ${base} не поддерживается API`);
+      }
+      if (target !== 'USD' && !quotes[sampleDate]['USD' + target]) {
+        throw new Error(`Валюта ${target} не поддерживается API`);
+      }
+
+      const labels = Object.keys(quotes).sort();
+      const data = deriveSeries(labels, quotes, base, target);
+
+      // Фильтр null
+      const validData = [];
+      const validLabels = [];
+      data.forEach((rate, i) => {
+        if (rate !== null) {
+          validData.push(rate);
+          validLabels.push(labels[i]);
+        }
+      });
+      if (validData.length === 0) {
+        throw new Error('Нет валидных курсов для выбранных валют');
+      }
+
+      // Показываем canvas (если был скрыт)
+      canvas.style.display = '';
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: validLabels.map(formatDate),
+          datasets: [{
+            label: `1 ${base} → ${target}`,
+            data: validData,
+            tension: 0.3,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 2,
+            backgroundColor: 'rgba(13, 110, 253, 0.15)', // bootstrap-primary с прозрачностью
+            borderColor: 'rgb(13, 110, 253)'
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { title: { display: true, text: 'Дата' } },
+            y: { title: { display: true, text: `Курс (${target})` } }
+          },
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      if (base !== 'USD') {
+        warn('Данные пересчитаны в браузере, возможна небольшая погрешность.');
+      }
+    } catch (e) {
+      console.error('Error in loadChart:', e);
+      warn('Не удалось загрузить данные: ' + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // ---- init ----
+  rebuildTargets();
+  selBase.addEventListener('change', rebuildTargets);
+  // График отрисовывается только после нажатия на "Показать"
+  btnShow.addEventListener('click', loadChart);
+});
+</script>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  /* Общие стили */
+  .form-select, .btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* Кнопка */
+  .btn-primary {
+    background-image: linear-gradient(90deg, #0d6efd 0%, #5a8dfd 100%);
+    border: none;
+  }
+  .btn-primary:hover {
+    background-image: linear-gradient(90deg, #0b5ed7 0%, #3e7eff 100%);
+  }
+
+  /* Карточки */
+  .card {
+    border-radius: 0.75rem;
+  }
+
+  /* Canvas */
+  #chart {
+    max-height: 400px;
+    display: none; /* Появится после первой загрузки */
+  }
+
+  /* Предупреждения */
+  .alert {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+
+  /* Спиннер */
+  .spinner-border {
+    vertical-align: middle;
+  }
+</style>
+{% endblock %}

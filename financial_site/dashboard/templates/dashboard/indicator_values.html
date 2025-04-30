@@ -1,0 +1,237 @@
+{% extends "dashboard/base.html" %}
+{% load custom_filters %}
+
+{% block title %}Показатели{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Показатели предприятия</h2>
+
+{# Показываем системные сообщения #}
+{% if messages %}
+  <div class="mb-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- ═════ ФИЛЬТРЫ ═════ -->
+<form method="get" class="row g-3 mb-5">
+  <div class="col-md-3">
+    <label class="form-label">Предприятие</label>
+    <select name="enterprise_id" class="form-select" onchange="this.form.submit()">
+      <option value="">Все</option>
+      {% for ent in enterprises %}
+        <option value="{{ ent.id }}" {% if selected_enterprise == ent.id %}selected{% endif %}>
+          {{ ent.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <label class="form-label">С даты</label>
+    <input type="date" name="from_date" class="form-control"
+           value="{{ from_date }}" onchange="this.form.submit()">
+  </div>
+  <div class="col-md-2">
+    <label class="form-label">По дату</label>
+    <input type="date" name="to_date" class="form-control"
+           value="{{ to_date }}" onchange="this.form.submit()">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Целевая валюта</label>
+    <select name="target_currency" class="form-select" onchange="this.form.submit()">
+      {% for cur in currencies %}
+        <option value="{{ cur }}" {% if cur == target_currency %}selected{% endif %}>
+          {{ cur }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<!-- ═════ БЛОК ДОБАВЛЕНИЯ ПОКАЗАТЕЛЯ ═════ -->
+<div class="accordion mb-5" id="addBlock">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingAdd">
+      <button class="accordion-button collapsed d-flex align-items-center" type="button"
+              data-bs-toggle="collapse" data-bs-target="#collapseAdd">
+        <i class="bi bi-plus-lg me-2"></i> Добавить новый показатель
+      </button>
+    </h2>
+    <div id="collapseAdd" class="accordion-collapse collapse" data-bs-parent="#addBlock">
+      <div class="accordion-body">
+
+        <form method="post" action="{% url 'indicator_add' %}" class="row g-3">
+          {% csrf_token %}
+
+          <div class="col-md-3">
+            <label class="form-label">Показатель</label>
+            <select name="indicator_id" id="indicatorSelect" class="form-select" required>
+              <option value="" disabled selected>— выбрать —</option>
+              {% for ind in indicators %}
+                <option value="{{ ind.id }}" data-importance="{{ ind.importance|default:1 }}">
+                  {{ ind.name }} ({{ ind.importance|floatformat:2 }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Предприятие</label>
+            <select name="enterprise_id" class="form-select" required>
+              {% for ent in enterprises %}
+                <option value="{{ ent.id }}" {% if ent.id == selected_enterprise %}selected{% endif %}>
+                  {{ ent.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Дата</label>
+            <input type="date" name="value_date" value="{{ today }}" class="form-control" required>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Доход</label>
+            <input type="number" step="0.01" min="0" id="incomeInput" class="form-control">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Расход</label>
+            <input type="number" step="0.01" min="0" id="expenseInput" class="form-control">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Валюта</label>
+            <select name="currency_code" id="currencySelect" class="form-select">
+              {% for cur in currencies %}
+                <option value="{{ cur }}">{{ cur }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Итоговое значение</label>
+            <input type="text" name="value" id="resultField" class="form-control" readonly required>
+          </div>
+
+          <div class="col-12 text-end">
+            <button type="submit" id="saveBtn" class="btn btn-success" disabled>
+              <i class="bi bi-save2 me-1"></i>Сохранить
+            </button>
+          </div>
+        </form>
+
+        <details class="mt-4">
+          <summary class="fw-semibold">Как рассчитывается?</summary>
+          <p class="small text-muted mt-2 mb-0">
+            <code>Значение = (Доход − Расход) × Важность показателя × Курс</code>,
+            где Важность берётся из справочника, Курс — из последних данных.
+          </p>
+        </details>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════ ТАБЛИЦА ЗНАЧЕНИЙ ═════ -->
+{% if values %}
+<table class="table table-bordered table-hover">
+  <thead class="table-light">
+    <tr>
+      <th>Показатель</th>
+      <th>Дата</th>
+      <th>Значение</th>
+      <th>Исходная валюта</th>
+      <th>В {{ target_currency }}</th>
+      <th>Предприятие</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in values %}
+      {% with code=v.currency_code.code|default:"RUB" %}
+        {% with rate=rates|get_item:code %}
+        <tr>
+          <td>{{ v.indicator.name }}</td>
+          <td>{{ v.value_date }}</td>
+          <td>{{ v.value }}</td>
+          <td>{{ code }}</td>
+          <td>
+            {% if v.value and code != target_currency and rate %}
+              {{ v.value|multiply:rate }} ({{ rate }})
+            {% else %}
+              {{ v.value }}
+            {% endif %}
+          </td>
+          <td>{{ v.enterprise.name }}</td>
+        </tr>
+        {% endwith %}
+      {% endwith %}
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p class="text-muted">Нет данных по выбранным условиям.</p>
+{% endif %}
+
+<!-- ═════ КУРСЫ ВАЛЮТ ═════ -->
+<h5 class="mt-5">Курсы к {{ target_currency }} на {{ today }}</h5>
+<ul class="list-group">
+  {% for code, rate in rates.items %}
+    {% if code != target_currency %}
+      <li class="list-group-item">
+        1 {{ code }} = {{ rate }} {{ target_currency }}
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>
+
+<!-- JSON-данные курсов -->
+{{ rates|json_script:"rate-data" }}
+
+<!-- JS: пересчёт и активация кнопки -->
+<script>
+  const rateData  = JSON.parse(document.getElementById("rate-data").textContent);
+
+  const inpIncome  = document.getElementById("incomeInput");
+  const inpExpense = document.getElementById("expenseInput");
+  const selInd     = document.getElementById("indicatorSelect");
+  const selCur     = document.getElementById("currencySelect");
+  const outValue   = document.getElementById("resultField");
+  const btnSave    = document.getElementById("saveBtn");
+
+  function getImportance() {
+    const opt = selInd.selectedOptions[0];
+    if (!opt) return 1;
+    const raw = (opt.dataset.importance || "1").toString().replace(",", ".");
+    const num = parseFloat(raw);
+    return isNaN(num) ? 1 : num;
+  }
+
+  function recalc() {
+    const income  = parseFloat(inpIncome.value.toString().replace(",", ".")) || 0;
+    const expense = parseFloat(inpExpense.value.toString().replace(",", ".")) || 0;
+    const imp     = getImportance();
+    const rate    = rateData[selCur.value] || 1;
+
+    const result  = (income - expense) * imp * rate;
+    const ready   = selInd.value && (income || expense);
+
+    outValue.value   = ready ? result.toFixed(2) : "";
+    btnSave.disabled = !ready;
+  }
+
+  ["input", "change"].forEach(evt => {
+    inpIncome.addEventListener(evt, recalc);
+    inpExpense.addEventListener(evt, recalc);
+  });
+  selInd.addEventListener("change", recalc);
+  selCur.addEventListener("change", recalc);
+</script>
+{% endblock %}
