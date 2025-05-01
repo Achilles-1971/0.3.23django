@@ -1,39 +1,454 @@
-{% extends 'dashboard/base.html' %}
+{% extends "dashboard/base.html" %}
+{% load static %}
 
 {% block title %}Главная - ФинАнализ{% endblock %}
 
+{% block extra_styles %}
+<link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@100;400;700&display=swap" rel="stylesheet">
+<style>
+  /* Общие стили */
+  body {
+    font-family: 'Helvetica Neue', sans-serif;
+    color: #FFFFFF;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background: linear-gradient(rgba(26, 26, 26, 0.8), rgba(26, 26, 26, 0.8)), url("{% static 'img/background.gif' %}") no-repeat center center;
+    background-size: cover;
+    background-attachment: fixed; /* Фон фиксирован */
+  }
+
+  /* Геройская секция - теперь просто контейнер для текста, не фиксирован */
+  .hero-section {
+    width: 100%;
+    min-height: calc(100vh - 60px); /* Учитываем высоту шапки */
+    padding-top: 60px; /* Место под шапку */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .hero-section .container {
+    max-width: 800px;
+    padding: 0;
+    margin-left: 0;
+  }
+
+  .hero-section h1 {
+    font-size: 5rem;
+    font-weight: 100;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin: 0 0 1rem;
+  }
+
+  .hero-section p {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: #B0B0B0;
+    margin: 0.5rem 0;
+    line-height: 1.6;
+  }
+
+  /* Приветственный алерт */
+  .alert {
+    background: #252525;
+    border: 1px solid #B0B0B0;
+    border-radius: 8px;
+    color: #B0B0B0;
+    padding: 1rem;
+    margin: 1.5rem auto;
+    max-width: 600px;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .alert-success {
+    border-color: #FFFFFF;
+  }
+
+  .alert-primary {
+    border-color: #B0B0B0;
+  }
+
+  .alert a {
+    color: #FFFFFF;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .alert a:hover {
+    color: #B0B0B0;
+  }
+
+  .btn-close {
+    filter: invert(0.6);
+    opacity: 0.5;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .btn-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  /* Секция "О нас" - убраны position и top */
+  .about-section {
+    padding: 4rem 0;
+  }
+
+  .about-section h2 {
+    font-size: 3rem;
+    font-weight: 100;
+    text-align: center;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .analysis-card {
+    background: #252525;
+    border: 1px solid #B0B0B0;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+    cursor: pointer;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .analysis-card:hover {
+    transform: translateY(-10px);
+    border-color: transparent;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7);
+    background: linear-gradient(145deg, #252525, #303030);
+  }
+
+  .analysis-card h3 {
+    font-size: 1.8rem;
+    font-weight: 400;
+    margin: 0;
+    z-index: 1;
+    transition: color 0.4s ease;
+  }
+
+  .analysis-card:hover h3 {
+    color: #FFFFFF;
+  }
+
+  .analysis-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .analysis-card:hoverක
+
+  .analysis-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Модальное окно */
+  .modal-content {
+    background: #252525;
+    border: 1px solid #B0B0B0;
+    border-radius: 8px;
+  }
+
+  .modal-header {
+    border-bottom: 1px solid #B0B0B0;
+    color: #FFFFFF;
+    padding: 0.8rem;
+  }
+
+  .modal-body {
+    color: #B0B0B0;
+    padding: 1.5rem;
+  }
+
+  .carousel-item {
+    text-align: center;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .carousel-item h4 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #FFFFFF;
+    margin-bottom: 0.5rem;
+  }
+
+  .carousel-item p {
+    font-size: 1rem;
+    color: #B0B0B0;
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  .carousel-item img {
+    max-width: 80%;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+  }
+
+  .carousel-control-prev,
+  .carousel-control-next {
+    filter: invert(0.6);
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+  }
+
+  .carousel-control-prev:hover,
+  .carousel-control-next:hover {
+    opacity: 1;
+  }
+
+  /* Футер - убраны position и top */
+  footer {
+    background: #1A1A1A;
+    padding: 2rem 0;
+    border-top: 1px solid #B0B0B0;
+  }
+
+  footer h5 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+  }
+
+  footer p {
+    font-size: 0.9rem;
+    color: #B0B0B0;
+    margin-bottom: 0.3rem;
+  }
+
+  footer a {
+    color: #FFFFFF;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  footer a:hover {
+    color: #B0B0B0;
+  }
+
+  /* Анимации */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- 🔷 Блок 1: Центрированная гифка с видимой птицей -->
-<div class="text-white text-center d-flex align-items-center justify-content-center"
-     style="height: 400px;
-            margin-top: 2rem;
-            background: url('/static/img/background.gif') no-repeat center 20%;
-            background-size: cover;
-            background-color: rgba(0, 0, 0, 0.5);
-            background-blend-mode: darken;">
-    <div class="container">
-        <h1 class="display-4 fw-bold">Финансовый анализ предприятий</h1>
-        <p class="lead">Анализируйте, сравнивайте, улучшайте</p>
-    </div>
+<!-- Геройская секция -->
+<div class="hero-section">
+  <div class="container">
+    <h1>ФинАнализ</h1>
+    <p>Анализируйте рынок.</p>
+    <p>Сравнивайте данные.</p>
+    <p>Принимайте решения.</p>
+  </div>
 </div>
 
-<!-- 🔷 Блок 2: О нас -->
-<section class="container my-5">
-    <h2>О нас</h2>
-    <ul class="list-unstyled fs-5">
-        <li>🔍 Отслеживание динамики финансовых показателей</li>
-        <li>💱 Конвертация валют в рубли</li>
-        <li>📊 Удобный просмотр и фильтрация данных</li>
-    </ul>
+<!-- Секция "О нас" -->
+<section class="container my-4 about-section">
+  {% if user.is_authenticated %}
+    <div id="welcome-alert-auth" class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+      <div>
+        Добро пожаловать, <strong>{{ user.username }}</strong>! Перейдите к
+        <a href="{% url 'indicator_values' %}" class="ms-1">анализу данных</a>.
+      </div>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+  {% else %}
+    <div id="welcome-alert-guest" class="alert alert-primary alert-dismissible fade show d-flex align-items-center" role="alert">
+      <div>
+        Чтобы начать,
+        <a href="{% url 'login' %}" class="ms-1">войдите</a> или
+        <a href="{% url 'register' %}" class="ms-1">зарегистрируйтесь</a>.
+      </div>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+  {% endif %}
+
+  <h2>О нас</h2>
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="analysis-card" data-bs-toggle="modal" data-bs-target="#analysisModal1">
+        <h3>Динамика</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="analysis-card" data-bs-toggle="modal" data-bs-target="#analysisModal2">
+        <h3>Валюты</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="analysis-card" data-bs-toggle="modal" data-bs-target="#analysisModal3">
+        <h3>Данные</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальные окна -->
+  <div class="modal fade" id="analysisModal1" tabindex="-1" aria-labelledby="analysisModal1Label" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="analysisModal1Label">Динамика</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="carousel1" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <h4>Анализ</h4>
+                <p>Отслеживайте показатели в реальном времени.</p>
+                <img src="{% static 'img/chart-placeholder.jpg' %}" alt="Chart">
+              </div>
+              <div class="carousel-item">
+                <h4>Графики</h4>
+                <p>Создавайте кастомные графики.</p>
+                <img src="{% static 'img/graph-placeholder.jpg' %}" alt="Graph">
+              </div>
+              <div class="carousel-item">
+                <h4>Автоматизация</h4>
+                <p>Получайте уведомления о изменениях.</p>
+                <img src="{% static 'img/automation-placeholder.jpg' %}" alt="Automation">
+              </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carousel1" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carousel1" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="analysisModal2" tabindex="-1" aria-labelledby="analysisModal2Label" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="analysisModal2Label">Валюты</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="carousel2" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <h4>Курсы</h4>
+                <p>Актуальные курсы валют.</p>
+                <img src="{% static 'img/currency-placeholder.jpg' %}" alt="Currency">
+              </div>
+              <div class="carousel-item">
+                <h4>История</h4>
+                <p>Анализ курсов за период.</p>
+                <img src="{% static 'img/history-placeholder.jpg' %}" alt="History">
+              </div>
+              <div class="carousel-item">
+                <h4>Интеграция</h4>
+                <p>Добавляйте в отчеты.</p>
+                <img src="{% static 'img/integration-placeholder.jpg' %}" alt="Integration">
+              </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carousel2" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carousel2" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="analysisModal3" tabindex="-1" aria-labelledby="analysisModal3Label" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="analysisModal3Label">Данные</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="carousel3" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <h4>Интерфейс</h4>
+                <p>Удобный просмотр данных.</p>
+                <img src="{% static 'img/interface-placeholder.jpg' %}" alt="Interface">
+              </div>
+              <div class="carousel-item">
+                <h4>Таблицы</h4>
+                <p>Настраиваемые таблицы.</p>
+                <img src="{% static 'img/table-placeholder.jpg' %}" alt="Table">
+              </div>
+              <div class="carousel-item">
+                <h4>Экспорт</h4>
+                <p>Экспорт в Excel/PDF.</p>
+                <img src="{% static 'img/export-placeholder.jpg' %}" alt="Export">
+              </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carousel3" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carousel3" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- 🔷 Блок 3: Контакты -->
-<footer class="bg-light p-4 mt-5 border-top">
-    <div class="container">
-        <h5>Контакты</h5>
-        <p>Email: <a href="mailto:support@finanalis.ru">support@finanalis.ru</a></p>
-        <p>Телефон: +7 (999) 123-45-67</p>
-        <p>Адрес: г. Москва, ул. Примерная, д. 1</p>
-    </div>
+<!-- Футер -->
+<footer class="p-2">
+  <div class="container">
+    <h5>Контакты</h5>
+    <p>Email: <a href="mailto:support@finanalis.ru">support@finanalis.ru</a></p>
+    <p>Телефон: +7 (999) 123-45-67</p>
+    <p>Адрес: Москва, ул. Примерная, 1</p>
+  </div>
 </footer>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const authAlert = document.getElementById('welcome-alert-auth');
+    const guestAlert = document.getElementById('welcome-alert-guest');
+
+    if (authAlert) authAlert.style.display = !localStorage.getItem('hideWelcomeAuth') ? 'flex' : 'none';
+    if (guestAlert) guestAlert.style.display = !localStorage.getItem('hideWelcomeGuest') ? 'flex' : 'none';
+
+    document.querySelectorAll('.alert-dismissible').forEach(alert => {
+      alert.addEventListener('closed.bs.alert', () => {
+        localStorage.setItem(alert.id === 'welcome-alert-auth' ? 'hideWelcomeAuth' : 'hideWelcomeGuest', '1');
+      });
+    });
+  });
+</script>
 {% endblock %}

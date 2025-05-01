@@ -12,7 +12,6 @@ SECRET_KEY = 'django-insecure-d3#5idcx1gj6o7^tgyx08wi&#12tfh614*%k$d$pv0-+s(y6rz
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -41,7 +40,7 @@ ROOT_URLCONF = 'financial_site.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],  # можно потом использовать глобальную папку шаблонов
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -49,6 +48,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'dashboard.context_processors.avatar_url',  # ✅ добавлено
             ],
         },
     },
@@ -59,7 +59,7 @@ WSGI_APPLICATION = 'financial_site.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': '0.3.23',  
+        'NAME': '0.3.23',
         'USER': 'postgres',
         'PASSWORD': '111',
         'HOST': 'localhost',
@@ -85,8 +85,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+MEDIA_URL = '/uploads/'  # было /media/
+MEDIA_ROOT = BASE_DIR / 'media'  # пусть остаётся
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+CLOUDINARY = {
+    "cloud_name": "dx9zbn2jk",
+    "api_key":    "716896857728632",
+    "api_secret": "G_MppLe8p0qcbLlOtJNR2UvJzC8",
+}

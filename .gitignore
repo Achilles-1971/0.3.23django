@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
@@ -6,69 +6,48 @@ __pycache__/
 # C extensions
 *.so
 
-# Distribution / packaging
+# --- Django ---
+*.log
+local_settings.py        # конфиденциальное, если есть
+db.sqlite3               # если не используется — можно удалить
+media/                   # НЕ трогать, если локально хранятся файлы
+staticfiles/             # создаётся collectstatic
+
+# .env-файлы с ключами/настройками
+.env
+.env.*
+
+# --- Пакетирование ---
+*.egg-info/
+*.egg
+dist/
 build/
 develop-eggs/
-dist/
-downloads/
-eggs/
 .eggs/
 lib/
 lib64/
 parts/
 sdist/
-var/
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
-*.egg-info/
 .installed.cfg
-*.egg
 MANIFEST
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
+# --- Coverage / Тесты ---
 htmlcov/
 .tox/
 .nox/
 .coverage
 .coverage.*
 .cache
-nosetests.xml
-coverage.xml
 *,cover
 .pytest_cache/
+nosetests.xml
+coverage.xml
 .hypothesis/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-
-# PyBuilder
-target/
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-media/
-staticfiles/
-
-# If you collect static into STATIC_ROOT
-# static/
-
-# Environment variables
-.env
-.venv/
-venv/
-ENV/
-env/
-env.bak/
-venv.bak/
-
-# IDEs and editors
+# --- IDE ---
 .vscode/
 .idea/
 *.suo
@@ -77,12 +56,18 @@ venv.bak/
 *.sln
 *.sw?
 
-# macOS
+# --- Операционные системы ---
 .DS_Store
-
-# Windows
 Thumbs.db
 
-# Others
+# --- Виртуальные окружения ---
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# --- Прочее ---
 *.bak
 *~

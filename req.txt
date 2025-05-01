@@ -1,4 +1,12 @@
-psycopg2-binary       # драйвер для PostgreSQL
-django-crispy-forms   # (опционально — удобные формы)
-django-apscheduler     # (опционально — планировщик задач)
-requests              # если будешь делать HTTP-запросы
+# База данных
+psycopg2-binary==2.9.9           # PostgreSQL драйвер
+
+# Django-плагины
+django-crispy-forms==2.1         # Удобные формы (опционально)
+django-apscheduler==0.6.4        # Планировщик задач (опционально)
+
+# Внешние запросы
+requests==2.31.0                 # HTTP-клиент
+
+# Cloudinary — для хранения аватарок
+cloudinary==1.39.0               # Работа с Cloudinary API

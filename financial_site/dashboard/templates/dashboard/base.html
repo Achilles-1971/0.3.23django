@@ -1,4 +1,5 @@
 {% load static %}
+{% now "U" as now %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,20 +10,58 @@
     <style>
         .nav-link-avatar img {
             border-radius: 50%;
-            height: 32px;
-            width: 32px;
+            height: 40px;
+            width: 40px;
             object-fit: cover;
+            border: 2px solid #fff;
+            transition: transform 0.2s ease;
+        }
+        .nav-link-avatar:hover img {
+            transform: scale(1.1);
+        }
+        .navbar-dark .nav-link {
+            position: relative;
+            font-size: 1.1rem;
+            padding: 0.75rem 2rem; /* Увеличенные горизонтальные отступы для большего расстояния */
+        }
+        .navbar-dark .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #fff;
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+        .navbar-dark .nav-link:hover::after {
+            transform: scaleX(1);
+        }
+        .navbar-dark .nav-link.active::after {
+            transform: scaleX(1);
+        }
+        .navbar-dark .navbar-brand {
+            font-size: 1.5rem;
+            padding: 0.75rem 1.5rem;
+        }
+        .navbar {
+            padding: 1rem 0;
         }
         .navbar .nav-link.active {
             font-weight: bold;
-            color: var(--bs-primary) !important;
+            color: #0d6efd !important;
+        }
+        .navbar-nav .nav-item {
+            display: flex;
+            align-items: center; /* Выравнивание пунктов меню и аватара по центру */
         }
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'home' %}">ФинАнализ</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -33,49 +72,39 @@
 
     <div class="collapse navbar-collapse" id="mainNavbar">
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
-             href="{% url 'home' %}">
-            Главная
-          </a>
+             href="{% url 'home' %}">Главная</a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'enterprise_list' %}active{% endif %}"
-             href="{% url 'enterprise_list' %}">
-            Предприятия
-          </a>
+             href="{% url 'enterprise_list' %}">Предприятия</a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'currency_list' %}active{% endif %}"
-             href="{% url 'currency_list' %}">
-            Курсы
-          </a>
+             href="{% url 'currency_list' %}">Курсы</a>
         </li>
-
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle nav-link-avatar" href="#" id="userDropdown"
              role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {% if request.user.is_authenticated and request.user.avatar_url %}
-              <img src="{{ request.user.avatar_url }}" alt="avatar">
+            {% if request.user.is_authenticated and avatar_url %}
+              <img src="{{ avatar_url }}?t={{ now }}" alt="avatar"
+                   onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
             {% else %}
               <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="guest">
             {% endif %}
           </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
             {% if request.user.is_authenticated %}
-              <li><a class="dropdown-item" href="#">Профиль</a></li>
+              <li><a class="dropdown-item" href="{% url 'profile' %}">Профиль</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#">Выйти</a></li>
+              <li><a class="dropdown-item" href="{% url 'logout' %}">Выйти</a></li>
             {% else %}
-              <li><a class="dropdown-item" href="#">Вход</a></li>
-              <li><a class="dropdown-item" href="#">Регистрация</a></li>
+              <li><a class="dropdown-item" href="{% url 'login' %}">Вход</a></li>
+              <li><a class="dropdown-item" href="{% url 'register' %}">Регистрация</a></li>
             {% endif %}
           </ul>
         </li>
-
       </ul>
     </div>
   </div>
