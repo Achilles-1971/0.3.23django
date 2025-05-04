@@ -20,7 +20,7 @@ class Command(BaseCommand):
 
             u = User.objects.create(
                 username=user.username,
-                password=django_password,  # уже хэш
+                password=django_password, 
             )
             created_count += 1
         self.stdout.write(self.style.SUCCESS(f"Импортировано: {created_count} пользователей."))

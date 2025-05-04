@@ -242,6 +242,19 @@
         {% endfor %}
       </select>
     </div>
+    {% if not selected_enterprise %}
+    <div class="col-md-3">
+      <label class="form-label">Показатель</label>
+      <select name="indicator_id" class="form-select" onchange="this.form.submit()">
+        <option value="">Все</option>
+        {% for ind in indicators %}
+          <option value="{{ ind.id }}" {% if request.GET.indicator_id == ind.id|stringformat:"s" %}selected{% endif %}>
+            {{ ind.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
     <div class="col-md-2">
       <label class="form-label">С даты</label>
       <input type="date" name="from_date" class="form-control" value="{{ from_date }}" onchange="this.form.submit()">
@@ -250,7 +263,7 @@
       <label class="form-label">По дату</label>
       <input type="date" name="to_date" class="form-control" value="{{ to_date }}" onchange="this.form.submit()">
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
       <label class="form-label">Целевая валюта</label>
       <select name="target_currency" class="form-select" onchange="this.form.submit()">
         {% for cur in currencies %}

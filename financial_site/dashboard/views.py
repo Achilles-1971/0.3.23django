@@ -14,22 +14,15 @@ from django.core.files.storage import FileSystemStorage
 
 from .models import (
     Enterprises, Indicators, IndicatorValues,
-    ExchangeRates, Users         # кастомная таблица
+    ExchangeRates, Users     
 )
 from .utils  import calculate_weighted_indicators
 from .forms  import LoginForm, RegisterForm
 
 
-# ─────────────────────────────────────────────
-#  Стандартные страницы
-# ─────────────────────────────────────────────
 def home(request):
     return render(request, "dashboard/home.html")
 
-
-# ─────────────────────────────────────────────
-#  Список предприятий
-# ─────────────────────────────────────────────
 def enterprise_list(request):
     q  = request.GET.get("q", "").strip()
     qs = Enterprises.objects.order_by('id')
@@ -70,20 +63,15 @@ def enterprise_list(request):
     })
 
 
-# ─────────────────────────────────────────────
-#  Справочник показателей
-# ─────────────────────────────────────────────
 def indicator_list(request):
     return render(request, "dashboard/indicator_list.html", {
         "indicators": Indicators.objects.all()
     })
 
 
-# ─────────────────────────────────────────────
-#  Значения показателей + фильтры
-# ─────────────────────────────────────────────
 def indicator_values(request):
     enterprise_id   = request.GET.get("enterprise_id")
+    indicator_id    = request.GET.get("indicator_id")  # Новый параметр
     from_date       = request.GET.get("from_date")
     to_date         = request.GET.get("to_date")
     target_currency = request.GET.get("target_currency", "RUB")
@@ -92,6 +80,8 @@ def indicator_values(request):
     qs = IndicatorValues.objects.select_related("enterprise", "indicator", "currency_code")
     if enterprise_id:
         qs = qs.filter(enterprise_id=enterprise_id)
+    if indicator_id:
+        qs = qs.filter(indicator_id=indicator_id)
     if from_date:
         qs = qs.filter(value_date__gte=from_date)
     if to_date:
@@ -123,25 +113,25 @@ def indicator_values(request):
     return render(request, "dashboard/indicator_values.html", {
         "values": values,
         "enterprises": Enterprises.objects.all(),
-        "indicators":  Indicators.objects.all(),
+        "indicators": Indicators.objects.all(),
         "selected_enterprise": int(enterprise_id) if enterprise_id else None,
-        "from_date": from_date, "to_date": to_date,
-        "rates": rates, "today": today,
+        "from_date": from_date, 
+        "to_date": to_date,
+        "rates": rates, 
+        "today": today,
         "target_currency": target_currency,
         "currencies": ["RUB", "USD", "EUR"],
         "sort_by": sort_by,
         "sort_choices": [
-            ("", "Без сортировки"), ("enterprise","По предприятию"),
-            ("indicator","По показателю"), ("value","По значению"),
-            ("date","По дате")
+            ("", "Без сортировки"), 
+            ("enterprise", "По предприятию"),
+            ("indicator", "По показателю"), 
+            ("value", "По значению"),
+            ("date", "По дате")
         ],
         "page_obj": values,
     })
 
-
-# ─────────────────────────────────────────────
-#  Добавление значения показателя
-# ─────────────────────────────────────────────
 @csrf_protect
 def indicator_add(request):
     if request.method == "POST":
@@ -158,10 +148,6 @@ def indicator_add(request):
             messages.error(request, f"Ошибка: {exc}")
     return redirect("indicator_values")
 
-
-# ─────────────────────────────────────────────
-#  Курсы валют
-# ─────────────────────────────────────────────
 def currency_list(request):
     currencies = ["RUB", "USD", "EUR"]
     base   = request.GET.get("base_currency",  "USD").upper()
@@ -180,9 +166,6 @@ def currency_list(request):
     })
 
 
-# ─────────────────────────────────────────────
-#  Аутентификация
-# ─────────────────────────────────────────────
 def login_view(request):
     form = LoginForm(request.POST or None)
 
@@ -193,7 +176,6 @@ def login_view(request):
         try:
             custom_user = Users.objects.get(username=username)
 
-            # Проверка пароля
             try:
                 if not bcrypt.checkpw(password.encode(), custom_user.hashed_password.encode()):
                     messages.error(request, "Неверный пароль")
@@ -205,7 +187,6 @@ def login_view(request):
                 custom_user.hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
                 custom_user.save()
 
-            # Создание или обновление auth_user
             user, created = User.objects.get_or_create(username=username)
             if created or not user.has_usable_password():
                 user.set_password(password)
@@ -215,10 +196,8 @@ def login_view(request):
             if user:
                 login(request, user)
 
-                # Проверка и очистка старого пути
                 avatar_url = custom_user.avatar_url or ""
                 if avatar_url.startswith("/uploads/") or avatar_url.startswith("avatars/"):
-                    # Автоматическая подстановка дефолтной картинки (если ссылка старая)
                     avatar_url = "https://res.cloudinary.com/dx9zbn2jk/image/upload/v1/avatars/default.jpg"
 
                 request.session['avatar_url'] = avatar_url
@@ -239,9 +218,6 @@ def logout_view(request):
     return redirect('login')
 
 
-# ─────────────────────────────────────────────
-#  Регистрация + Cloudinary
-# ─────────────────────────────────────────────
 def register_view(request):
     form = RegisterForm(request.POST or None, request.FILES or None)
 
@@ -254,10 +230,8 @@ def register_view(request):
             messages.error(request, "Пользователь с таким именем уже существует")
             return render(request, 'dashboard/auth/register.html', {'form': form})
 
-        # пароль
         hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-        # Cloudinary конфиг
         cloudinary.config(
             cloud_name = settings.CLOUDINARY["cloud_name"],
             api_key    = settings.CLOUDINARY["api_key"],
@@ -274,14 +248,12 @@ def register_view(request):
         else:
             avatar_url = "https://res.cloudinary.com/dx9zbn2jk/image/upload/v1/avatars/default.jpg"
 
-        # в кастомную таблицу
         Users.objects.create(
             username=username,
             hashed_password=hashed_pw,
             avatar_url=avatar_url
         )
 
-        # auth_user + логин
         user = User.objects.create_user(username=username, password=password)
         login(request, user)
         request.session['avatar_url'] = avatar_url
@@ -304,7 +276,7 @@ def enterprise_add(request):
 def profile_view(request):
     user = request.user
     custom_user = Users.objects.filter(username=user.username).first()
-    enterprises = Enterprises.objects.filter(added_by=user)  # предполагается поле added_by в модели
+    enterprises = Enterprises.objects.filter(added_by=user)  
 
     avatar_url = custom_user.avatar_url if custom_user and custom_user.avatar_url else ""
 
@@ -322,7 +294,6 @@ def update_username(request):
     new_username = request.POST.get('username', '').strip()
 
     if new_username and new_username != request.user.username:
-        # Обновим и auth_user, и кастомную Users
         request.user.username = new_username
         request.user.save()
 
@@ -331,7 +302,6 @@ def update_username(request):
             custom_user.username = new_username
             custom_user.save()
 
-        # Обновим сессию
         update_session_auth_hash(request, request.user)
 
     return redirect('profile')
@@ -341,14 +311,12 @@ def update_username(request):
 def update_avatar(request):
     avatar_file = request.FILES.get('avatar')
     if avatar_file:
-        # Настройка Cloudinary
         cloudinary.config(
             cloud_name = settings.CLOUDINARY["cloud_name"],
             api_key    = settings.CLOUDINARY["api_key"],
             api_secret = settings.CLOUDINARY["api_secret"],
         )
 
-        # Загрузка в Cloudinary
         try:
             result = cloudinary.uploader.upload(
                 avatar_file,
@@ -360,13 +328,11 @@ def update_avatar(request):
             messages.error(request, f"Ошибка загрузки аватара: {e}")
             return redirect('profile')
 
-        # Обновим в кастомной таблице
         custom_user = Users.objects.filter(username=request.user.username).first()
         if custom_user:
             custom_user.avatar_url = avatar_url
             custom_user.save()
 
-        # Обновим в сессии
-        request.session['avatar_url'] = avatar_url
+        messages.success(request, "Аватар успешно обновлён.")
 
     return redirect('profile')

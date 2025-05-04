@@ -114,7 +114,6 @@
       </div>
     {% endfor %}
 
-    <!-- Предпросмотр аватарки -->
     <div class="mb-3 text-center">
       <img id="avatarPreview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
            alt="Avatar Preview" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
@@ -131,7 +130,6 @@
 
 {% block extra_scripts %}
 <script>
-  // При выборе файла — обновляем превью
   const input = document.querySelector('input[type="file"][name="avatar_url"]');
   const preview = document.getElementById("avatarPreview");
 

@@ -22,7 +22,7 @@
         .navbar-dark .nav-link {
             position: relative;
             font-size: 1.1rem;
-            padding: 0.75rem 2rem; /* Увеличенные горизонтальные отступы для большего расстояния */
+            padding: 0.75rem 2rem; 
         }
         .navbar-dark .nav-link::after {
             content: '';
@@ -54,7 +54,7 @@
         }
         .navbar-nav .nav-item {
             display: flex;
-            align-items: center; /* Выравнивание пунктов меню и аватара по центру */
+            align-items: center; 
         }
     </style>
     {% block extra_styles %}{% endblock %}
@@ -87,12 +87,12 @@
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle nav-link-avatar" href="#" id="userDropdown"
              role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {% if request.user.is_authenticated and avatar_url %}
-              <img src="{{ avatar_url }}?t={{ now }}" alt="avatar"
-                   onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
-            {% else %}
-              <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="guest">
-            {% endif %}
+             {% if request.user.is_authenticated and avatar_url %}
+                <img src="{{ avatar_url }}?t={{ now }}" alt="avatar"
+                    onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+              {% else %}
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="guest">
+              {% endif %}       
           </a>
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
             {% if request.user.is_authenticated %}

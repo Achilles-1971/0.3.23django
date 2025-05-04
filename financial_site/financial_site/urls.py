@@ -8,6 +8,5 @@ urlpatterns = [
     path('', include('dashboard.urls')),
 ]
 
-# Обслуживание файлов при DEBUG=True
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

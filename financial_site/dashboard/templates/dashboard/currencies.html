@@ -6,7 +6,6 @@
 {% block extra_styles %}
 <link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@100;400;700&display=swap" rel="stylesheet">
 <style>
-  /* Общие стили */
   body {
     font-family: 'Helvetica Neue', sans-serif;
     color: #FFFFFF;
@@ -19,13 +18,11 @@
     background-attachment: fixed;
   }
 
-  /* Контейнер */
   .container-xl {
-    padding-top: 60px; /* Учитываем шапку */
+    padding-top: 60px; 
     min-height: calc(100vh - 60px);
   }
 
-  /* Заголовок */
   h2 {
     font-size: 3rem;
     font-weight: 100;
@@ -41,7 +38,6 @@
     letter-spacing: 1px;
   }
 
-  /* Карточка */
   .card {
     background: #252525;
     border: 1px solid #B0B0B0;
@@ -56,7 +52,7 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
   }
 
-  /* Форма */
+
   .form-label {
     font-size: 1rem;
     color: #B0B0B0;
@@ -78,7 +74,7 @@
     outline: none;
   }
 
-  /* Кнопка */
+
   .btn-primary {
     background: linear-gradient(145deg, #252525, #303030);
     border: 1px solid #FFFFFF;
@@ -114,14 +110,13 @@
     opacity: 1;
   }
 
-  /* Спиннер */
+ 
   .spinner-border {
     vertical-align: middle;
     border-color: #FFFFFF;
     border-right-color: transparent;
   }
 
-  /* Предупреждения */
   .alert {
     background: #252525;
     border: 1px solid #B0B0B0;
@@ -136,13 +131,11 @@
     border-color: #FFFFFF;
   }
 
-  /* Canvas */
   #chart {
     max-height: 400px;
-    display: none; /* Появится после первой загрузки */
+    display: none; 
   }
 
-  /* Анимации */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -156,10 +149,8 @@
     Курсы валют <small>(90 дней)</small>
   </h2>
 
-  <!-- данные для JS -->
   <div id="fx-data" data-api="{{ api_key }}" data-months="3"></div>
 
-  <!-- Фильтры -->
   <div class="card border-0 p-4 mb-4">
     <div class="row g-3 align-items-end">
       <div class="col-md-3">
@@ -191,10 +182,8 @@
     </div>
   </div>
 
-  <!-- предупреждения -->
   <div id="alerts" class="mb-3"></div>
 
-  <!-- график -->
   <div class="card border-0 p-4">
     <canvas id="chart" height="210" class="my-3"></canvas>
   </div>
@@ -211,13 +200,11 @@ console.log('Script started');
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded');
 
-  // ---- константы ----
   const CURS = ['RUB', 'USD', 'EUR'];
   const dataEl = document.getElementById('fx-data');
   const API_KEY = dataEl.dataset.api;
   const MONTHS = parseInt(dataEl.dataset.months, 10);
 
-  // ---- DOM ----
   const selBase = document.getElementById('baseCur');
   const selTgt = document.getElementById('tgtCur');
   const alerts = document.getElementById('alerts');
@@ -227,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const spinner = document.getElementById('spinner');
   let chart = null;
 
-  // ---- helpers ----
   function warn(msg) {
     alerts.innerHTML = `<div class="alert alert-warning mb-0">${msg}</div>`;
   }
@@ -237,7 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
     spinner.classList.toggle('d-none', !state);
   }
 
-  // Перестраиваем список целевых валют, исключая базовую
   function rebuildTargets() {
     const baseNow = selBase.value;
     const previous = selTgt.value;
@@ -249,7 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
     selTgt.value = (previous !== baseNow && CURS.includes(previous)) ? previous : selTgt.options[0].value;
   }
 
-  // Преобразуем USD-базовые данные в base→target
   function deriveSeries(labels, quotes, base, target) {
     return labels.map(date => {
       if (!quotes[date]) return null;
@@ -260,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Форматируем даты для оси X
   function formatDate(dateStr) {
     const date = new Date(dateStr);
     return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' });
@@ -278,14 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showLoading(true);
 
-    // Вычисляем диапазон дат
     const end = new Date();
     const start = new Date();
     start.setMonth(start.getMonth() - MONTHS);
     const endStr = end.toISOString().slice(0, 10);
     const startStr = start.toISOString().slice(0, 10);
 
-    // exchangerate.host запрос
     const url = `https://api.exchangerate.host/timeframe?access_key=${API_KEY}&start_date=${startStr}&end_date=${endStr}&source=USD&currencies=EUR,RUB&format=1`;
 
     try {
@@ -310,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const labels = Object.keys(quotes).sort();
       const data = deriveSeries(labels, quotes, base, target);
 
-      // Фильтр null
       const validData = [];
       const validLabels = [];
       data.forEach((rate, i) => {
@@ -323,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Нет валидных курсов для выбранных валют');
       }
 
-      // Показываем canvas (если был скрыт)
       canvas.style.display = '';
 
       if (chart) chart.destroy();
@@ -338,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fill: true,
             borderWidth: 2,
             pointRadius: 2,
-            backgroundColor: 'rgba(255, 255, 255, 0.15)', /* Белый с прозрачностью для видимости */
+            backgroundColor: 'rgba(255, 255, 255, 0.15)', 
             borderColor: '#FFFFFF'
           }]
         },
@@ -372,10 +351,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ---- init ----
   rebuildTargets();
   selBase.addEventListener('change', rebuildTargets);
-  // График отрисовывается только после нажатия на "Показать"
   btnShow.addEventListener('click', loadChart);
 });
 </script>
