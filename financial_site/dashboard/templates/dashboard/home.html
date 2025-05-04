@@ -15,12 +15,12 @@
     overflow-x: hidden;
     background: linear-gradient(rgba(26, 26, 26, 0.8), rgba(26, 26, 26, 0.8)), url("{% static 'img/background.gif' %}") no-repeat center center;
     background-size: cover;
-    background-attachment: fixed; 
+    background-attachment: fixed;
   }
 
   .hero-section {
     width: 100%;
-    min-height: calc(100vh - 60px); 
+    min-height: calc(100vh - 60px);
     padding-top: 60px;
     display: flex;
     align-items: center;
@@ -39,6 +39,7 @@
     text-transform: uppercase;
     letter-spacing: 4px;
     margin: 0 0 1rem;
+    animation: fadeInUp 0.8s ease-out;
   }
 
   .hero-section p {
@@ -49,6 +50,9 @@
     line-height: 1.6;
   }
 
+  .hero-section p:nth-child(2) { animation: fadeInUp 0.8s ease-out 0.2s backwards; }
+  .hero-section p:nth-child(3) { animation: fadeInUp 0.8s ease-out 0.4s backwards; }
+  .hero-section p:nth-child(4) { animation: fadeInUp 0.8s ease-out 0.6s backwards; }
 
   .alert {
     background: #252525;
@@ -111,7 +115,7 @@
     text-align: center;
     transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
     cursor: pointer;
-    height: 250px;
+    height: 280px; /* Увеличена высота */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -150,8 +154,6 @@
     transition: opacity 0.4s ease;
   }
 
-  .analysis-card:hoverක
-
   .analysis-card:hover::before {
     opacity: 1;
   }
@@ -171,6 +173,10 @@
   .modal-body {
     color: #B0B0B0;
     padding: 1.5rem;
+  }
+
+  .carousel-inner {
+    padding: 0 40px; /* Отступы для предотвращения перекрытия текста стрелками */
   }
 
   .carousel-item {
@@ -200,6 +206,7 @@
 
   .carousel-control-prev,
   .carousel-control-next {
+    width: 40px; /* Уменьшен размер стрелок */
     filter: invert(0.6);
     opacity: 0.5;
     transition: opacity 0.2s ease;
@@ -208,6 +215,12 @@
   .carousel-control-prev:hover,
   .carousel-control-next:hover {
     opacity: 1;
+  }
+
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    width: 20px; /* Уменьшен размер иконок */
+    height: 20px;
   }
 
   footer {
@@ -242,6 +255,11 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 {% endblock %}
 
@@ -249,9 +267,9 @@
 <div class="hero-section">
   <div class="container">
     <h1>ФинАнализ</h1>
-    <p>Анализируйте рынок.</p>
-    <p>Сравнивайте данные.</p>
-    <p>Принимайте решения.</p>
+    <p>Анализируйте рынок</p>
+    <p>Сравнивайте данные</p>
+    <p>Принимайте решения</p>
   </div>
 </div>
 
@@ -262,7 +280,7 @@
         Добро пожаловать, <strong>{{ user.username }}</strong>! Перейдите к
         <a href="{% url 'indicator_values' %}" class="ms-1">анализу данных</a>.
       </div>
-      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   {% else %}
     <div id="welcome-alert-guest" class="alert alert-primary alert-dismissible fade show d-flex align-items-center" role="alert">
@@ -271,7 +289,7 @@
         <a href="{% url 'login' %}" class="ms-1">войдите</a> или
         <a href="{% url 'register' %}" class="ms-1">зарегистрируйтесь</a>.
       </div>
-      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   {% endif %}
 
@@ -279,17 +297,17 @@
   <div class="row g-3">
     <div class="col-md-4">
       <div class="analysis-card" data-bs-toggle="modal" data-bs-target="#analysisModal1">
-        <h3>Динамика</h3>
+        <h3>Анализ показателей</h3>
       </div>
     </div>
     <div class="col-md-4">
       <div class="analysis-card" data-bs-toggle="modal" data-bs-target="#analysisModal2">
-        <h3>Валюты</h3>
+        <h3>Курсы валют</h3>
       </div>
     </div>
     <div class="col-md-4">
       <div class="analysis-card" data-bs-toggle="modal" data-bs-target="#analysisModal3">
-        <h3>Данные</h3>
+        <h3>Управление данными</h3>
       </div>
     </div>
   </div>
@@ -298,26 +316,27 @@
     <div class="modal-dialog modal-md">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="analysisModal1Label">Динамика</h5>
+          <h5 class="modal-title" id="analysisModal1Label">Анализ показателей</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <div id="carousel1" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
               <div class="carousel-item active">
-                <h4>Анализ</h4>
-                <p>Отслеживайте показатели в реальном времени.</p>
-                <img src="{% static 'img/chart-placeholder.jpg' %}" alt="Chart">
+                <h4>Взвешенные показатели</h4>
+                <p>Оценивайте эффективность предприятий с учетом важности показателей и курсов валют</p>
+                <img src="{% static 'img/indicator-analysis.jpg' %}" alt="Weighted Indicators Analysis">
               </div>
               <div class="carousel-item">
-                <h4>Графики</h4>
-                <p>Создавайте кастомные графики.</p>
-                <img src="{% static 'img/graph-placeholder.jpg' %}" alt="Graph">
+                <h4>Фильтрация данных</h4>
+                <p>Фильтруйте показатели по предприятиям, датам и валютам для точного анализа</p>
+                <img src="{% static 'img/data-filtering.jpg' %}" alt="Data Filtering">
               </div>
               <div class="carousel-item">
-                <h4>Автоматизация</h4>
-                <p>Получайте уведомления о изменениях.</p>
-                <img src="{% static 'img/automation-placeholder.jpg' %}" alt="Automation">
+                <h4>Реальное время</h4>
+                <p>Получайте актуальные данные о производительности в реальном времени</p>
+                <img src="{% static 'img/realtime-data.jpg' %}" alt="Realtime Data">
+                <a href="{% url 'indicator_values' %}" class="btn btn-primary mt-2">Перейти к анализу</a>
               </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#carousel1" data-bs-slide="prev">
@@ -338,26 +357,27 @@
     <div class="modal-dialog modal-md">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="analysisModal2Label">Валюты</h5>
+          <h5 class="modal-title" id="analysisModal2Label">Курсы валют</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <div id="carousel2" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
               <div class="carousel-item active">
-                <h4>Курсы</h4>
-                <p>Актуальные курсы валют.</p>
-                <img src="{% static 'img/currency-placeholder.jpg' %}" alt="Currency">
+                <h4>Актуальные курсы</h4>
+                <p>Просматривайте текущие курсы RUB, USD, EUR для точных расчетов</p>
+                <img src="{% static 'img/currency-rates.jpg' %}" alt="Currency Rates">
               </div>
               <div class="carousel-item">
-                <h4>История</h4>
-                <p>Анализ курсов за период.</p>
-                <img src="{% static 'img/history-placeholder.jpg' %}" alt="History">
+                <h4>Конвертация</h4>
+                <p>Автоматически конвертируйте показатели в выбранную валюту</p>
+                <img src="{% static 'img/currency-conversion.jpg' %}" alt="Currency Conversion">
               </div>
               <div class="carousel-item">
-                <h4>Интеграция</h4>
-                <p>Добавляйте в отчеты.</p>
-                <img src="{% static 'img/integration-placeholder.jpg' %}" alt="Integration">
+                <h4>Аналитика</h4>
+                <p>Анализируйте влияние валютных курсов на финансовые показатели</p>
+                <img src="{% static 'img/currency-analytics.jpg' %}" alt="Currency Analytics">
+                <a href="{% url 'currency_list' %}" class="btn btn-primary mt-2">Просмотреть курсы</a>
               </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#carousel2" data-bs-slide="prev">
@@ -378,26 +398,27 @@
     <div class="modal-dialog modal-md">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="analysisModal3Label">Данные</h5>
+          <h5 class="modal-title" id="analysisModal3Label">Управление данными</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <div id="carousel3" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
               <div class="carousel-item active">
-                <h4>Интерфейс</h4>
-                <p>Удобный просмотр данных.</p>
-                <img src="{% static 'img/interface-placeholder.jpg' %}" alt="Interface">
+                <h4>Добавление данных</h4>
+                <p>Легко добавляйте новые предприятия и их показатели</p>
+                <img src="{% static 'img/data-entry.jpg' %}" alt="Data Entry">
               </div>
               <div class="carousel-item">
-                <h4>Таблицы</h4>
-                <p>Настраиваемые таблицы.</p>
-                <img src="{% static 'img/table-placeholder.jpg' %}" alt="Table">
+                <h4>Управление профилем</h4>
+                <p>Обновляйте данные профиля и загружайте аватары через Cloudinary</p>
+                <img src="{% static 'img/profile-management.jpg' %}" alt="Profile Management">
               </div>
               <div class="carousel-item">
-                <h4>Экспорт</h4>
-                <p>Экспорт в Excel/PDF.</p>
-                <img src="{% static 'img/export-placeholder.jpg' %}" alt="Export">
+                <h4>Организация данных</h4>
+                <p>Управляйте списком предприятий и их реквизитами</p>
+                <img src="{% static 'img/data-organization.jpg' %}" alt="Data Organization">
+                <a href="{% url 'enterprise_list' %}" class="btn btn-primary mt-2">Управлять предприятиями</a>
               </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#carousel3" data-bs-slide="prev">
